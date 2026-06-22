@@ -61,7 +61,7 @@ const SUGGESTIONS = [
   'Explain the main concept simply',
 ];
 
-export default function Chat({ mode, hasDocuments }) {
+export default function Chat({ mode, hasDocuments, onMenu = () => {} }) {
   const [messages, setMessages] = useState([]); // {role, text, sources, grounded}
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -100,10 +100,20 @@ export default function Chat({ mode, hasDocuments }) {
   return (
     <main className="flex h-full flex-1 flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-blue-100/70 bg-white/60 px-6 py-3 backdrop-blur-xl">
+      <header className="flex items-center justify-between border-b border-blue-100/70 bg-white/60 px-4 py-3 backdrop-blur-xl sm:px-6">
         <div className="flex items-center gap-2">
+          <button
+            onClick={onMenu}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-blue-600 transition hover:bg-blue-50 md:hidden"
+            title="Documents"
+            aria-label="Open documents panel"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
           <h2 className="font-bold text-slate-800">Chat</h2>
-          <span className="text-sm text-slate-400">— powered by Neo</span>
+          <span className="hidden text-sm text-slate-400 sm:inline">— powered by Neo</span>
         </div>
         {mode && (
           <span
@@ -125,7 +135,7 @@ export default function Chat({ mode, hasDocuments }) {
       </header>
 
       {/* Messages */}
-      <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-6 sm:px-6">
         {messages.length === 0 && (
           <div className="mx-auto mt-10 max-w-md text-center">
             <div
@@ -166,7 +176,7 @@ export default function Chat({ mode, hasDocuments }) {
               </div>
             )}
             <div
-              className={`max-w-xl rounded-2xl px-4 py-3 text-sm shadow-sm ${
+              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm sm:max-w-xl ${
                 m.role === 'user'
                   ? 'rounded-br-md bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-blue-500/20'
                   : m.error

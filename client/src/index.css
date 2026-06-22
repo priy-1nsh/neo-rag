@@ -6,6 +6,21 @@ body,
   height: 100%;
 }
 
+/* Sidebar: slide-in drawer on mobile, static column on desktop (md+). */
+.neo-drawer {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+.neo-drawer.is-open {
+  transform: translateX(0);
+}
+@media (min-width: 768px) {
+  .neo-drawer,
+  .neo-drawer.is-open {
+    transform: none;
+  }
+}
+
 /* Neo mascot animations */
 @keyframes neoBlink {
   0%, 92%, 100% { transform: scaleY(1); }

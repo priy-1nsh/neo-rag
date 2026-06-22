@@ -16,7 +16,7 @@ function SourceBadge({ type }) {
   );
 }
 
-export default function Sidebar({ documents, onChanged }) {
+export default function Sidebar({ documents, onChanged, open = false, onClose = () => {} }) {
   const [tab, setTab] = useState('upload'); // 'upload' | 'paste'
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -32,6 +32,7 @@ export default function Sidebar({ documents, onChanged }) {
     try {
       await api.uploadFile(file);
       await onChanged();
+      onClose();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -49,6 +50,7 @@ export default function Sidebar({ documents, onChanged }) {
       setPasteTitle('');
       setPasteText('');
       await onChanged();
+      onClose();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -69,17 +71,33 @@ export default function Sidebar({ documents, onChanged }) {
   }
 
   return (
-    <aside className="flex h-full w-80 shrink-0 flex-col border-r border-blue-100/70 bg-white/70 backdrop-blur-xl">
+    <aside
+      className={`neo-drawer absolute inset-y-0 left-0 z-40 flex h-full w-80 max-w-[85%] shrink-0 flex-col border-r border-blue-100/70 bg-white/95 backdrop-blur-xl md:static md:z-auto md:max-w-none md:bg-white/70 ${
+        open ? 'is-open shadow-2xl' : ''
+      }`}
+    >
       {/* Brand header */}
       <div className="bg-gradient-to-br from-blue-500 to-indigo-600 px-5 pb-6 pt-5 text-white shadow-lg shadow-blue-500/20">
-        <div className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white shadow-md shadow-blue-900/10">
-            <NeoLogo size={34} />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white shadow-md shadow-blue-900/10">
+              <NeoLogo size={34} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold leading-tight">Neo</h1>
+              <p className="text-xs text-blue-100">Ask Neo about your documents</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-bold leading-tight">Neo</h1>
-            <p className="text-xs text-blue-100">Ask Neo about your documents</p>
-          </div>
+          <button
+            onClick={onClose}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/15 text-white transition hover:bg-white/25 md:hidden"
+            title="Close"
+            aria-label="Close documents panel"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
       </div>
 
