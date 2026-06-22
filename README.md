@@ -55,6 +55,21 @@ npm run dev                   # http://localhost:5173
 
 Open http://localhost:5173, add a document, and start chatting.
 
+## Deploy (Render + Neon, single service)
+
+The app deploys as **one Node web service** — Express serves both the API and the
+built React client, so there's a single URL and no CORS.
+
+1. **Database — Neon:** create a project at [neon.tech](https://neon.tech) and copy
+   the connection string (includes `sslmode=require`). pgvector is preinstalled.
+2. **Push to GitHub:** create an empty repo, then
+   `git remote add origin <url> && git push -u origin main`.
+3. **Render:** New + → **Blueprint** → pick the repo (it reads [`render.yaml`](render.yaml)).
+   Set `DATABASE_URL` to your Neon string. Leave `OPENAI_API_KEY` unset to run in
+   mock mode (or set it for live OpenAI). Deploy.
+   - Build: `npm run build` · Start: `npm run start` (runs the migration, then boots).
+   - Health check: `/api/health`.
+
 ## API
 
 | Method | Route                      | Purpose                          |
