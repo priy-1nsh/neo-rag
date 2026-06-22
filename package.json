@@ -1,0 +1,16 @@
+{
+  "name": "neo-rag",
+  "version": "1.0.0",
+  "description": "Neo — RAG app (React + Express + Postgres/pgvector). Single-service deploy.",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+    "migrate": "npm run migrate --prefix server",
+    "start": "npm run migrate --prefix server && node server/src/index.js",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  }
+}

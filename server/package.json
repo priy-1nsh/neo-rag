@@ -1,0 +1,20 @@
+{
+  "name": "chat-with-notes-server",
+  "version": "1.0.0",
+  "description": "RAG API for Chat with Notes — Express + Postgres/pgvector + OpenAI",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "migrate": "node src/db/migrate.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^2.0.0",
+    "openai": "^4.56.0",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.12.0"
+  }
+}

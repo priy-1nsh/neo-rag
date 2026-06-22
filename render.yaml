@@ -1,0 +1,20 @@
+# Render Blueprint — deploy Neo as a single Node web service.
+# In Render: New + → Blueprint → pick this repo. Then set DATABASE_URL
+# (and optionally OPENAI_API_KEY) when prompted.
+services:
+  - type: web
+    name: neo-rag
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Paste your Neon connection string in the Render dashboard.
+      - key: DATABASE_URL
+        sync: false
+      # Optional — leave unset to run in offline mock mode (no cost).
+      - key: OPENAI_API_KEY
+        sync: false
