@@ -1,91 +1,98 @@
-# 🤖 Neo — Ask about your documents
+# Neo — Ask about your documents
 
-**Neo** is a full-stack, end-to-end **Retrieval-Augmented Generation** app. Upload your notes
-(PDF / Markdown / plain text / pasted text), and ask questions answered **strictly
-from your documents**, with **inline citations** back to the source chunks.
+Neo is a full-stack, end-to-end **Retrieval-Augmented Generation (RAG)** application.
+Upload your notes — PDF, Markdown, plain text, or pasted content — and ask questions
+that are answered **strictly from your own documents**, with **inline citations** back
+to the exact source passages.
 
-Built to showcase a production-shaped RAG pipeline in the JavaScript ecosystem.
+**Live demo:** https://neo-rag.onrender.com
 
-## Stack
+---
 
-| Layer       | Tech                                                        |
-| ----------- | ---------------------------------------------------------- |
-| Frontend    | React + Vite + Tailwind CSS v4                              |
-| Backend     | Node.js + Express                                          |
-| Vector DB   | PostgreSQL + **pgvector** (HNSW cosine index)              |
-| Embeddings  | OpenAI `text-embedding-3-small` (1536-dim)                 |
-| Generation  | OpenAI `gpt-4o-mini`                                       |
-| Guardrails  | Grounded-only system prompt · similarity threshold · cited sources |
+## Features
 
-## The RAG pipeline
+- **Document ingestion** — PDF, Markdown, `.txt`, and direct paste, parsed and chunked automatically.
+- **Semantic search** — documents are embedded and retrieved by meaning, not keywords, using vector similarity.
+- **Grounded answers** — responses are constrained to the retrieved context; if the answer isn't in your notes, Neo says so instead of hallucinating.
+- **Inline citations** — every answer references the source chunks it used, viewable in the UI.
+- **Provider-flexible** — runs live on OpenAI when an API key is present, or in a fully offline mode for zero-cost development and demos.
+
+## Tech stack
+
+| Layer        | Technology                                              |
+| ------------ | ------------------------------------------------------ |
+| Frontend     | React, Vite, Tailwind CSS                              |
+| Backend      | Node.js, Express                                       |
+| Vector store | PostgreSQL with the `pgvector` extension (HNSW index)  |
+| Embeddings   | OpenAI `text-embedding-3-small` (1536-dim)            |
+| Generation   | OpenAI `gpt-4o-mini`                                   |
+
+## How it works
 
 ```
-Upload ─▶ Extract text ─▶ Chunk (1000 chars, 150 overlap) ─▶ Embed ─▶ Store in pgvector
-Question ─▶ Embed query ─▶ Cosine search (top-k) ─▶ Guardrail filter ─▶ LLM w/ context ─▶ Cited answer
+Ingest:   document → extract text → chunk (overlapping) → embed → store vectors
+Query:    question → embed → cosine search (top-k) → relevance filter → LLM with context → cited answer
 ```
 
-## Offline "mock" mode (no API key needed)
+Each answer is generated only from the top matching chunks, and the model is instructed
+to cite them and to refuse when the context doesn't contain the answer.
 
-If `OPENAI_API_KEY` is **not** set, the backend automatically runs in **mock mode**:
-deterministic local embeddings + templated grounded answers. The *entire* pipeline
-(upload → chunk → vector search → cited answer) works with **zero credits**. Paste a
-real key into `server/.env` and it switches to live OpenAI with **no code changes**.
+## Project structure
 
-## Setup
+```
+.
+├── client/        React + Vite + Tailwind frontend
+├── server/        Express API, RAG pipeline, database layer
+│   └── src/
+│       ├── db/          Postgres pool, schema, migration
+│       ├── providers/   Embedding + chat provider (OpenAI / offline)
+│       ├── services/    parse · chunk · embed · retrieve · answer
+│       └── routes/      /api/documents, /api/chat
+└── render.yaml    Single-service deployment blueprint
+```
 
-### 1. Database (free Neon Postgres)
-Create a database at [neon.tech](https://neon.tech) and copy its connection string.
-pgvector is available there by default.
+## Local development
 
-### 2. Backend
+**Prerequisites:** Node.js 20+, and a PostgreSQL database with `pgvector`
+([Neon](https://neon.tech) provides this on its free tier).
+
 ```bash
+# Backend
 cd server
 npm install
-cp .env.example .env          # then fill in DATABASE_URL (and OPENAI_API_KEY when you have one)
-npm run migrate               # creates tables + pgvector extension
+cp .env.example .env          # set DATABASE_URL (and OPENAI_API_KEY for live mode)
+npm run migrate               # create tables + pgvector extension
 npm run dev                   # http://localhost:3001
-```
 
-### 3. Frontend
-```bash
+# Frontend (separate terminal)
 cd client
 npm install
 npm run dev                   # http://localhost:5173
 ```
 
-Open http://localhost:5173, add a document, and start chatting.
+Without an `OPENAI_API_KEY`, the app runs in an offline mode that generates
+deterministic local embeddings and grounded responses, so the full pipeline is
+exercisable end-to-end without external calls.
 
-## Deploy (Render + Neon, single service)
+## Deployment
 
-The app deploys as **one Node web service** — Express serves both the API and the
-built React client, so there's a single URL and no CORS.
+Neo deploys as a **single Node service** — Express serves the built React client
+alongside the API, so there is one URL and no CORS configuration.
 
-1. **Database — Neon:** create a project at [neon.tech](https://neon.tech) and copy
-   the connection string (includes `sslmode=require`). pgvector is preinstalled.
-2. **Push to GitHub:** create an empty repo, then
-   `git remote add origin <url> && git push -u origin main`.
-3. **Render:** New + → **Blueprint** → pick the repo (it reads [`render.yaml`](render.yaml)).
-   Set `DATABASE_URL` to your Neon string. Leave `OPENAI_API_KEY` unset to run in
-   mock mode (or set it for live OpenAI). Deploy.
-   - Build: `npm run build` · Start: `npm run start` (runs the migration, then boots).
-   - Health check: `/api/health`.
+1. Provision a PostgreSQL database with `pgvector` (e.g. Neon) and copy its connection string.
+2. On [Render](https://render.com): **New → Blueprint** and select the repository
+   (it reads `render.yaml`).
+3. Set `DATABASE_URL` to the connection string. Optionally set `OPENAI_API_KEY`.
+4. Deploy. The build installs both workspaces, builds the client, runs the database
+   migration, and starts the server. Health check: `/api/health`.
 
 ## API
 
-| Method | Route                      | Purpose                          |
-| ------ | -------------------------- | -------------------------------- |
-| GET    | `/api/health`              | Mode (mock/openai) + model info  |
-| GET    | `/api/documents`           | List documents                   |
-| POST   | `/api/documents/upload`    | Upload a file (multipart `file`) |
-| POST   | `/api/documents/paste`     | Add pasted text `{title, text}`  |
-| DELETE | `/api/documents/:id`       | Delete a document + its chunks   |
-| POST   | `/api/chat`                | Ask `{question}` → cited answer  |
-
-## Guardrails (interview talking points)
-
-1. **Grounded-only** — the system prompt forbids outside knowledge; if the answer
-   isn't in the retrieved context, the model returns `"I don't know based on your notes."`
-2. **Relevance threshold** — if the best chunk's cosine similarity is too low, the
-   app refuses before even calling the LLM.
-3. **Inline citations** — every answer cites `[n]` markers linked to the exact source
-   snippets, viewable in the UI.
+| Method   | Endpoint                  | Description                          |
+| -------- | ------------------------- | ----------------------------------- |
+| `GET`    | `/api/health`             | Service status and active mode      |
+| `GET`    | `/api/documents`          | List ingested documents             |
+| `POST`   | `/api/documents/upload`   | Upload a file (`multipart/form-data`) |
+| `POST`   | `/api/documents/paste`    | Ingest pasted text                  |
+| `DELETE` | `/api/documents/:id`      | Delete a document and its chunks    |
+| `POST`   | `/api/chat`               | Ask a question; returns a cited answer |
