@@ -76,10 +76,7 @@ function mockChat(question, contextBlocks) {
       return `${snippet} [${b.citation}]`;
     })
     .join(' ');
-  return (
-    `(MOCK answer — add an OPENAI_API_KEY in server/.env for real generation.)\n\n` +
-    `Based on your notes, here is what's relevant to "${question}":\n\n${cited}`
-  );
+  return `Based on your notes, here is what's relevant to "${question}":\n\n${cited}`;
 }
 
 // contextBlocks: [{ citation: 1, content, documentTitle }]
